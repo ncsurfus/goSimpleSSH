@@ -71,8 +71,20 @@ func (surfusShell SurfusShell) ExpectRegex(regex string) string {
 	return output
 }
 
-// ShellConnect creates an SSH connection to a device and open up a terminal
-func (surfusShell *SurfusShell) ShellConnect(host, user, pass string, challenge ssh.KeyboardInteractiveChallenge) error {
+// ShellConnect creates an SSH connection to a device and opens up a terminal. This will automatically answer any KeyboardInteractiveChallenges with autoAnswerChallenge
+func (surfusShell *SurfusShell) ShellConnect(host, user, pass string, autoAnswerChallenge string) error {
+	return surfusShell.ShellConnectInteractive(host, user, pass, func(user, instruction string, questions []string, echos []bool) ([]string, error) {
+		// Just send the password back for all questions
+		answers := make([]string, len(questions))
+		for i := range answers {
+			answers[i] = pass
+		}
+		return answers, nil
+	})
+}
+
+// ShellConnectInteractive creates an SSH connection to a device and open up a terminal. This method allows you to provide your own KeyboardInteractiveChallenge
+func (surfusShell *SurfusShell) ShellConnectInteractive(host, user, pass string, challenge ssh.KeyboardInteractiveChallenge) error {
 	sshConfig := &ssh.ClientConfig{
 		User: user,
 		Auth: []ssh.AuthMethod{ssh.Password(pass), ssh.KeyboardInteractive(challenge)},
