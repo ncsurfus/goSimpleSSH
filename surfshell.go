@@ -1,4 +1,4 @@
-package goSimpleSSH
+package surfshell
 
 import (
 	"bufio"
