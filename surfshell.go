@@ -54,16 +54,20 @@ func (surfusShell SurfusShell) Expect(match string, timeout time.Duration) (stri
 	var output = ""
 	var startTime = time.Now().UnixNano()
 	for strings.Contains(output, match) == false {
-		character, _, err := surfusShell.reader.ReadRune()
-		if err != nil {
-			return "", err
-		}
+		if surfusShell.reader.Buffered() > 0 {
 
-		if time.Now().UnixNano()-startTime >= timeout.Nanoseconds() {
-			return "", errors.New("Timeout when attempting to get " + match)
-		}
+			if time.Now().UnixNano()-startTime >= timeout.Nanoseconds() {
+				return "", errors.New("Timeout when attempting to get " + match)
+			}
 
-		output = output + string(character)
+			character, _, err := surfusShell.reader.ReadRune()
+			if err != nil {
+				return "", err
+			}
+			output = output + string(character)
+		} else {
+			time.Sleep(10 * time.Millisecond)
+		}
 	}
 
 	return output, nil
@@ -86,16 +90,19 @@ func (surfusShell SurfusShell) ExpectRegex(regex string, timeout time.Duration) 
 			return output, nil
 		}
 
-		character, _, err := surfusShell.reader.ReadRune()
-		if err != nil {
-			return "", err
-		}
-
 		if time.Now().UnixNano()-startTime >= timeout.Nanoseconds() {
 			return "", errors.New("Timeout when attempting to get " + regex)
 		}
 
-		output = output + string(character)
+		if surfusShell.reader.Buffered() > 0 {
+			character, _, err := surfusShell.reader.ReadRune()
+			if err != nil {
+				return "", err
+			}
+			output = output + string(character)
+		} else {
+			time.Sleep(10 * time.Millisecond)
+		}
 	}
 
 	return output, nil
