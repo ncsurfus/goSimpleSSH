@@ -172,6 +172,11 @@ func (surfusShell *SurfusShell) ShellConnectInteractive(host, user, pass string,
 
 // Close will disconnect from the Client
 func (surfusShell SurfusShell) Close() {
-	surfusShell.client.Close()
-	surfusShell.session.Close()
+	if surfusShell.session != nil {
+		surfusShell.session.Close()
+	}
+
+	if surfusShell.client != nil {
+		surfusShell.client.Close()
+	}
 }
