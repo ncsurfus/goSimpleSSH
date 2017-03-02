@@ -2,8 +2,10 @@ package surfshell
 
 import (
 	"bufio"
+	"errors"
 	"regexp"
 	"strings"
+	"time"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -48,27 +50,55 @@ func (surfusShell SurfusShell) Read() (rune, error) {
 }
 
 // Expect reads data from a buffer until a string is matched.
-func (surfusShell SurfusShell) Expect(match string) string {
+func (surfusShell SurfusShell) Expect(match string, timeout time.Duration) (string, error) {
 	var output = ""
+	var startTime = time.Now().UnixNano()
 	for strings.Contains(output, match) == false {
-		character, _, _ := surfusShell.reader.ReadRune()
+		character, _, err := surfusShell.reader.ReadRune()
+		if err != nil {
+			return "", err
+		}
+
+		if time.Now().UnixNano()-startTime >= timeout.Nanoseconds() {
+			return "", errors.New("Timeout when attempting to get " + match)
+		}
+
 		output = output + string(character)
 	}
 
-	return output
+	return output, nil
 }
 
 // ExpectRegex reads data from a buffer until a regex expression is matched.
-func (surfusShell SurfusShell) ExpectRegex(regex string) string {
+func (surfusShell SurfusShell) ExpectRegex(regex string, timeout time.Duration) (string, error) {
 	var output = ""
 	var matched = false
+	var startTime = time.Now().UnixNano()
+
 	for matched == false {
-		matched, _ = regexp.MatchString(regex, output)
-		character, _, _ := surfusShell.reader.ReadRune()
+		matched, err := regexp.MatchString(regex, output)
+
+		if err != nil {
+			return "", err
+		}
+
+		if matched {
+			return output, nil
+		}
+
+		character, _, err := surfusShell.reader.ReadRune()
+		if err != nil {
+			return "", err
+		}
+
+		if time.Now().UnixNano()-startTime >= timeout.Nanoseconds() {
+			return "", errors.New("Timeout when attempting to get " + regex)
+		}
+
 		output = output + string(character)
 	}
 
-	return output
+	return output, nil
 }
 
 // ShellConnect creates an SSH connection to a device and opens up a terminal. This will automatically answer any KeyboardInteractiveChallenges with autoAnswerChallenge
