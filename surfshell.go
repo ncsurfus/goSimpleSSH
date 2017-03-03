@@ -65,8 +65,8 @@ func (surfusShell SurfusShell) Expect(match string, timeout time.Duration) (stri
 				return "", err
 			}
 			output = output + string(character)
-		} else {
-			time.Sleep(10 * time.Millisecond)
+			//	} else {
+			//		time.Sleep(10 * time.Millisecond)
 		}
 	}
 
@@ -75,6 +75,7 @@ func (surfusShell SurfusShell) Expect(match string, timeout time.Duration) (stri
 
 // ExpectRegex reads data from a buffer until a regex expression is matched.
 func (surfusShell SurfusShell) ExpectRegex(regex string, timeout time.Duration) (string, error) {
+	//fmt.Println("Entering...")
 	var output = ""
 	var matched = false
 	var startTime = time.Now().UnixNano()
@@ -93,18 +94,17 @@ func (surfusShell SurfusShell) ExpectRegex(regex string, timeout time.Duration) 
 		if time.Now().UnixNano()-startTime >= timeout.Nanoseconds() {
 			return "", errors.New("Timeout when attempting to get " + regex)
 		}
-
-		if surfusShell.reader.Buffered() > 0 {
-			character, _, err := surfusShell.reader.ReadRune()
-			if err != nil {
-				return "", err
-			}
-			output = output + string(character)
-		} else {
-			time.Sleep(10 * time.Millisecond)
+		//	if surfusShell.reader.Buffered() > 0 {
+		character, _, err := surfusShell.reader.ReadRune()
+		if err != nil {
+			return "", err
 		}
+		output = output + string(character)
+		//	} else {
+		//	time.Sleep(10 * time.Millisecond)
+		//}
 	}
-
+	//fmt.Println("Leaving...")
 	return output, nil
 }
 
